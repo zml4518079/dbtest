@@ -12,7 +12,8 @@ public class CollectionDataSearchDao {
         this.restClient = restClient;
     }
 
-    public BulkResponse initData() {
-        return null;
+    public void initStoredData(ColletionDataInsertDao insertDao) {
+
     }
+
 }
