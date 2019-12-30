@@ -1,6 +1,9 @@
 package com.eagle;
 
 import com.eagle.point.ColletionDataBean;
+import org.influxdb.InfluxDB;
+import org.influxdb.dto.BatchPoints;
+import org.influxdb.dto.Point;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -48,5 +51,34 @@ public class DataUtils {
 
     public long getPeriod() {
         return period;
+    }
+
+    public static void insertDataByModelId(InfluxDB influxDB, String modelId, String dataBase, String rpName, String measurement) {
+        // 构造数据
+        long startTime = 1577604000000L;
+        final int insertNum =1000;
+        final int periodTime = 1 * 1000;
+        DataUtils dataUtils = new DataUtils(modelId,"1","1", periodTime);
+        long runningTime = 0;
+        for (int i = 0; i < 100; i++) {
+            startTime = startTime - (insertNum * periodTime) * i;
+            List<ColletionDataBean> dataBeans = dataUtils.createCDBeans(insertNum, startTime);
+            BatchPoints batchPoints = BatchPoints
+                    .database(dataBase)
+                    .tag("async", "true")
+                    .retentionPolicy(rpName)
+                    .consistency(InfluxDB.ConsistencyLevel.ALL)
+                    .build();
+            for (ColletionDataBean dataBean:dataBeans) {
+                Point point = Point.measurement(measurement).addFieldsFromPOJO(dataBean).build();
+                batchPoints.point(point);
+            }
+
+            long start = System.currentTimeMillis();
+            influxDB.write(batchPoints);
+            runningTime += (System.currentTimeMillis() - start);
+        }
+
+        System.out.println("insert running time[ms]:" + runningTime);
     }
 }

@@ -3,6 +3,7 @@ package com.eagle;
 import com.eagle.point.ColletionDataBean;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
+import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
@@ -37,23 +38,32 @@ public class PerformanceTest {
 
         this.influxDB.query(new Query("DROP DATABASE " + QUERY_DATABASE));
         this.influxDB.query(new Query("CREATE DATABASE " + QUERY_DATABASE));
+        String rpName = "aRetentionPolicy";
+        influxDB.query(new Query("CREATE RETENTION POLICY " + rpName + " ON " + QUERY_DATABASE + " DURATION 820h REPLICATION 2 DEFAULT"));
         this.influxDB.enableBatch(10000, 100, TimeUnit.MILLISECONDS);
         // 构造数据
         long startTime = 1577604000000L;
-        final int insertNum = 200;
+        final int insertNum =100;
         final int periodTime = 30 * 1000;
         DataUtils dataUtils = new DataUtils("thinkpad","1","1", periodTime);
         for (int i = 0; i < 10; i++) {
             startTime = startTime - (insertNum * periodTime) * i;
             List<ColletionDataBean> dataBeans = dataUtils.createCDBeans(insertNum, startTime);
-            List<String> lineProtocols = new ArrayList<String>();
+            BatchPoints batchPoints = BatchPoints
+                    .database(QUERY_DATABASE)
+                    .tag("async", "true")
+                    .retentionPolicy(rpName)
+                    .consistency(InfluxDB.ConsistencyLevel.ALL)
+                    .build();
             for (ColletionDataBean dataBean:dataBeans) {
                 Point point = Point.measurement(QUERY_MEASUREMENT).addFieldsFromPOJO(dataBean).build();
-                lineProtocols.add(point.lineProtocol());
+                batchPoints.point(point);
             }
 
-            this.influxDB.write(UDP_PORT, lineProtocols);
+            this.influxDB.write(batchPoints);
         }
+
+        System.out.println(influxDB.query(new Query("SELECT * FROM " + QUERY_MEASUREMENT, QUERY_DATABASE)));
     }
 
     /**
@@ -94,7 +104,7 @@ public class PerformanceTest {
 
     @Test
     public void queryPerformance() {
-//        String queryStr = "SELECT * FROM " + QUERY_MEASUREMENT + " WHERE cd_date > '2019-12-29T00:00:00Z'";
+//        String queryStr = "SELECT * FROM " + QUERY_MEASUREMENT + " WHERE cd_date > '2019-12-28T00:00:00Z'";
         String queryStr = "SELECT * FROM " + QUERY_MEASUREMENT;
         long start = System.currentTimeMillis();
         QueryResult queryResult = influxDB.query(new Query(queryStr, QUERY_DATABASE));
@@ -102,5 +112,11 @@ public class PerformanceTest {
         System.out.println("performance(ms):query data by time:" + elapsedForBatchWrite);
         System.out.println("result size:" + queryResult.getResults().size());
         System.out.println(queryResult.toString());
+    }
+
+    public void insertTest() {
+        long startTime = 1577604000000L;
+        DataUtils dataUtils = new DataUtils("thinkpad","1","1", 60*1000);
+        List<ColletionDataBean> dataBeans = dataUtils.createCDBeans(500, startTime);
     }
 }
