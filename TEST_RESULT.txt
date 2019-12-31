@@ -1,0 +1,10 @@
+INFLUXDB 入库效率
+批量插入数据，一次插入十万条数据，每次批1000条，分100批插入耗时如下
+    insert running time[ms]:6088
+    insert running time[ms]:4382
+    insert running time[ms]:5776
+    insert running time[ms]:7008
+    insert running time[ms]:7927
+    insert running time[ms]:5401
+平均用时6097（ms）
+INFLUXDB 查询效率

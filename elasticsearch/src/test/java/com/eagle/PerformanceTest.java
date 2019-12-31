@@ -5,28 +5,24 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Date;
+
+import static com.eagle.QueryUtils.QUERY_INDEX;
 
 public class PerformanceTest {
 
     private RestHighLevelClient client;
     private BulkProcessor bulkProcessor;
-
-    private final static String QUERY_INDEX = "collection_data_query";
 
     @Before
     public void setUp() {
@@ -98,21 +94,24 @@ public class PerformanceTest {
 //            SearchResponse searchResponse = client.search(new SearchRequest(QUERY_INDEX), RequestOptions.DEFAULT);
 //            System.out.println(searchResponse);
 
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-//            sourceBuilder.query(QueryBuilders.termQuery("modelId", "AppleMac"));
-//            sourceBuilder.query(QueryBuilders.rangeQuery("cdDate").gte(1577512800000L));
-//            sourceBuilder.sort("cdDate", SortOrder.DESC);
-            sourceBuilder.size(20);
-            SearchRequest searchRequest = new SearchRequest(QUERY_INDEX);
-            searchRequest.source(sourceBuilder);
+            QueryUtils queryUtils = new QueryUtils();
 
-            long start = System.currentTimeMillis();
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-            long elapsedForBatchWrite = System.currentTimeMillis() - start;
-            System.out.println("performance(ms):query data by time:" + elapsedForBatchWrite);
-            System.out.println(searchResponse);
+            SearchRequest searchSourceBuilder = queryUtils.queryByModelIdOrderBycdDate("AppleMac", 5);
+            System.out.println(QueryUtils.search(client, searchSourceBuilder,
+                    "queryByModelIdOrderBycdDate"));
+            System.out.println("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+");
+            searchSourceBuilder = queryUtils.queryByModelIdAndcdDateRangeOrderBycdDate("ThinkPad",
+                    new Date(1577603996000L), new Date(1577604000000L));
+            System.out.println(QueryUtils.search(client, searchSourceBuilder,
+                    "queryByModelIdAndcdDateRangeOrderBycdDate"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void concurrenceTest() {
+        QueryUtils queryUtils = new QueryUtils();
+        queryUtils.concurrentuery(client, 500, "AppleMac", 15);
     }
 }
