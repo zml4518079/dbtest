@@ -60,10 +60,13 @@ public class QueryUtils {
             countDownLatch.countDown();
         }
 
+        long start = System.currentTimeMillis();
         executor.shutdown();
         while (!executor.isTerminated()){
             Thread.yield();
         }
+        long elapsedForBatchWrite = System.currentTimeMillis() - start;
+        System.out.println("performance(ms) :query data by time:" + elapsedForBatchWrite);
     }
 
     private class QueryTask implements Callable<SearchResponse> {

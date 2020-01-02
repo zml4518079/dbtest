@@ -94,8 +94,9 @@ public class PerformanceTest {
 //            System.out.println(searchResponse);
 
             QueryUtils queryUtils = new QueryUtils();
+            SearchRequest searchSourceBuilder = null;
 
-            SearchRequest searchSourceBuilder = queryUtils.queryByModelIdOrderBycdDate("AppleMac", 5);
+            searchSourceBuilder = queryUtils.queryByModelIdOrderBycdDate("AppleMac", 15);
             System.out.println(QueryUtils.search(client, searchSourceBuilder,
                     "queryByModelIdOrderBycdDate"));
             System.out.println("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+");
@@ -111,6 +112,9 @@ public class PerformanceTest {
     @Test
     public void concurrenceTest() {
         QueryUtils queryUtils = new QueryUtils();
-        queryUtils.concurrentuery(client, 500, "AppleMac", 15);
+        int taskNumber = 500;
+        queryUtils.concurrentuery(client, taskNumber, "IdealPad", 15);
+        System.out.println("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+");
+        queryUtils.concurrentuery(client, taskNumber, "AppleMac", 15);
     }
 }

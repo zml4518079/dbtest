@@ -46,11 +46,12 @@ public class InsertQueryPerformanceTest {
     @Test
     public void queryPerformance() {
         QueryUtils queryUtils = new QueryUtils();
-        Query query = queryUtils.queryByModelIdOrderBycdDate("ThinkPad", 5);
+        Query query = null;
+        query = queryUtils.queryByModelIdOrderBycdDate("ABC", 15);
         System.out.println("query result:" +
                 QueryUtils.search(influxDB, query, "queryByModelIdOrderBycdDate"));
         System.out.println("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+");
-        query = queryUtils.queryByModelIdAndcdDateRangeOrderBycdDate("ThinkPad",
+        query = queryUtils.queryByModelIdAndcdDateRangeOrderBycdDate("ABC",
                 new Date(1577593996000L), new Date(1577594000000L));
         System.out.println("query result:" +
                 QueryUtils.search(influxDB, query, "queryByModelIdAndcdDateRangeOrderBycdDate"));
@@ -59,6 +60,9 @@ public class InsertQueryPerformanceTest {
     @Test
     public void concurrenceTest() {
         QueryUtils queryUtils = new QueryUtils();
-        queryUtils.concurrentuery(influxDB, 500, "AppleMac", 15);
+        int taskNumber = 10;
+        queryUtils.concurrentuery(influxDB, taskNumber, "AppleMac", 15);
+        System.out.println("=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+");
+        queryUtils.concurrentuery(influxDB, taskNumber, "AppleMac", 15);
     }
 }
