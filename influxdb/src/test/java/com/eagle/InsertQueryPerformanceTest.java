@@ -19,7 +19,9 @@ public class InsertQueryPerformanceTest {
 
     @Before
     public void setUp() {
-        this.influxDB = InfluxDBFactory.connect("http://" + TestUtils.getInfluxIP() + ":" + TestUtils.getInfluxPORT(true), "root", "root");
+        this.influxDB = InfluxDBFactory.connect(
+                "http://" + TestUtils.getInfluxIP() + ":" + TestUtils.getInfluxPORT(true),
+                "root", "root");
         this.influxDB.setLogLevel(InfluxDB.LogLevel.NONE);
     }
 
@@ -28,7 +30,8 @@ public class InsertQueryPerformanceTest {
         influxDB.query(new Query("DROP DATABASE " + QUERY_DATABASE));
         influxDB.query(new Query("CREATE DATABASE " + QUERY_DATABASE));
         String rpName = "aRetentionPolicy";
-        influxDB.query(new Query("CREATE RETENTION POLICY " + rpName + " ON " + QUERY_DATABASE + " DURATION 4320h REPLICATION 2 DEFAULT"));
+        influxDB.query(new Query("CREATE RETENTION POLICY " + rpName + " ON " +
+                QUERY_DATABASE + " DURATION 4320h REPLICATION 2 DEFAULT"));
         influxDB.enableBatch(10000, 100, TimeUnit.MILLISECONDS);
 
         DataUtils.insertDataByModelId(influxDB, "ThinkPad", QUERY_DATABASE, rpName, QUERY_MEASUREMENT);
